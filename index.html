@@ -1155,6 +1155,25 @@
 				</ul>
 				</p>
 			</section>
+			<section>
+				<h1>Распознавание текста на изображении</h1>
+				<h3>Библиотека Tesseract</h3>
+				<p>
+					<select id="langs">
+						<option value="rus" selected>Русский</option>
+						<option value="eng">English</option>
+					</select>
+				
+					<!-- инпут для загрузки файла изображения -->
+					<input type="file" id="file" />
+				
+					<!-- лог процесса обработки и вывод результата -->
+					<div id="log"></div>
+				
+					<!-- кнопка Начать обработку -->
+					<button type="button" id="start">Начать обработку</button>
+				</p>
+			</section>
 		</div>
 	</div>
 
@@ -1162,6 +1181,7 @@
 	<script src="plugin/notes/notes.js"></script>
 	<script src="plugin/markdown/markdown.js"></script>
 	<script src="plugin/highlight/highlight.js"></script>
+	<script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
 	<script>
 		// More info about initialization & config:
 		// - https://revealjs.com/initialization/
@@ -1173,6 +1193,46 @@
 			plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
 		});
 	</script>
+	<script>
+        // Распознавание изображения
+        function recognize(file, lang, logger) {
+            return Tesseract.recognize(file, lang, { logger })
+                .then(({ data: { text } }) => {
+                    return text;
+                })
+        }
+        const log = document.getElementById('log');
+
+        // Отслеживание прогресса обработки
+        function updateProgress(data) {
+            log.innerHTML = '';
+            const statusText = document.createTextNode(data.status);
+            const progress = document.createElement('progress');
+            progress.max = 1;
+            progress.value = data.progress;
+            log.appendChild(statusText);
+            log.appendChild(progress);
+        }
+
+        // Вывод результата
+        function setResult(text) {
+            log.innerHTML = '';
+            text = text.replace(/\n\s*\n/g, '\n');
+            const pre = document.createElement('pre');
+            pre.innerHTML = text;
+            log.appendChild(pre);
+        }
+
+        document.getElementById('start').addEventListener('click', () => {
+            const file = document.getElementById('file').files[0];
+            if (!file) return;
+
+            const lang = document.getElementById('langs').value;
+
+            recognize(file, lang, updateProgress)
+                .then(setResult);
+        });
+    </script>
 </body>
 
 </html>
